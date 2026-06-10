@@ -20,46 +20,22 @@ function formatDate(filename: string) {
   return `${months[parseInt(mm)-1]} ${parseInt(dd)}, ${yyyy}`;
 }
 
-interface PriceItem {
-  label: string;
-  value: string;
-  change: string;
-  direction: "up" | "down" | "flat";
-}
-
-function parsePrices(text: string): PriceItem[] {
-  const lines = text.split("\n");
-  const pricesStart = lines.findIndex(l => l.includes("PRECIOS CLAVE HOY"));
-  if (pricesStart === -1) return [];
-
-  const items: PriceItem[] = [];
-  for (let i = pricesStart + 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line || line.startsWith("Se detectaron") || line.startsWith("ORION")) break;
-    const match = line.match(/([^:]+):\s*([\d.]+)\s+([^\s]+)\s+([▲▼—])\s*([\d.]+)%/);
-    if (match) {
-      const dir = match[4] === "▲" ? "up" : match[4] === "▼" ? "down" : "flat";
-      items.push({
-        label: match[1].trim().replace(/_/g, " ").toUpperCase(),
-        value: `${match[2]} ${match[3]}`,
-        change: `${match[4]} ${match[5]}%`,
-        direction: dir,
-      });
-    }
-  }
-  return items;
+interface PriceData {
+  key: string;
+  name: string;
+  unit: string;
+  price: number;
+  changePct: number;
 }
 
 function parseBriefingBody(text: string): string {
-  // Extract everything after the header line
   const lines = text.split("\n");
   const startIdx = lines.findIndex(l => l.includes("ORION ENERGY INTELLIGENCE"));
   if (startIdx === -1) return text;
 
-  const bodyLines = lines.slice(startIdx + 2); // skip header + separator
-
-  // Convert to HTML
+  const bodyLines = lines.slice(startIdx + 2);
   let html = "";
+
   for (const line of bodyLines) {
     const trimmed = line.trim();
 
@@ -68,11 +44,10 @@ function parseBriefingBody(text: string): string {
       continue;
     }
 
-    // Section headers like ## 1. TITLE — NIVEL: ALTA
     if (trimmed.startsWith("## ")) {
       const content = trimmed.replace(/^## /, "");
       const levelMatch = content.match(/— NIVEL: (ALTA|MEDIA|BAJA)/i);
-      let title = content.replace(/— NIVEL: (ALTA|MEDIA|BAJA)/i, "").trim();
+      const title = content.replace(/— NIVEL: (ALTA|MEDIA|BAJA)/i, "").trim();
       let badge = "";
       if (levelMatch) {
         const level = levelMatch[1].toLowerCase();
@@ -82,7 +57,6 @@ function parseBriefingBody(text: string): string {
       continue;
     }
 
-    // Section labels like TENSIONES ACTIVAS, SÍNTESIS EJECUTIVA, PULSO DE MERCADO
     if (
       trimmed === trimmed.toUpperCase() &&
       trimmed.length > 3 &&
@@ -94,13 +68,11 @@ function parseBriefingBody(text: string): string {
       continue;
     }
 
-    // Horizontal rule
     if (trimmed === "---") {
       html += "<hr/>";
       continue;
     }
 
-    // Bold fields like **Qué está pasando:**
     const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     html += `<p>${boldLine}</p>`;
   }
@@ -113,6 +85,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [filename, setFilename] = useState<string>("");
+  const [prices, setPrices] = useState<PriceData[]>([]);
 
   useEffect(() => {
     async function loadBriefing() {
@@ -129,15 +102,45 @@ export default function Home() {
         setLoading(false);
       }
     }
+
+    async function loadPrices() {
+      try {
+        const res = await fetch("/api/prices");
+        const data = await res.json();
+        setPrices(data);
+      } catch {
+        // prices optional
+      }
+    }
+
     loadBriefing();
+    loadPrices();
   }, []);
 
-  const prices = briefingText ? parsePrices(briefingText) : [];
   const bodyHtml = briefingText ? parseBriefingBody(briefingText) : "";
   const dateLabel = formatDate(filename);
 
   return (
     <>
+      {prices.length > 0 && (
+        <div className="ticker-bar">
+          <div className="ticker-inner">
+            {prices.map((p) => (
+              <div className="ticker-item" key={p.key}>
+                <span className="ticker-name">{p.name}</span>
+                <span className="ticker-price">{p.price}</span>
+                <span className={`ticker-change ${p.changePct >= 0 ? "up" : "down"}`}>
+                  {p.changePct >= 0 ? "▲" : "▼"} {Math.abs(p.changePct)}%
+                </span>
+              </div>
+            ))}
+            <div className="ticker-timestamp">
+              {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} ET
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="site-header">
         <div className="site-header-inner">
           <a href="/" className="site-logo">ORION</a>
@@ -159,18 +162,6 @@ export default function Home() {
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
             <div className="briefing-date">{dateLabel}</div>
-
-            {prices.length > 0 && (
-              <div className="prices-bar">
-                {prices.map((p, i) => (
-                  <div className="price-item" key={i}>
-                    <span className="price-label">{p.label}</span>
-                    <span className="price-value">{p.value}</span>
-                    <span className={`price-change ${p.direction}`}>{p.change}</span>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div
               className="briefing-body"
