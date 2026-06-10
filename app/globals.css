@@ -264,3 +264,63 @@ body {
   .site-header-inner { flex-direction: column; gap: 0.25rem; }
   .prices-bar { gap: 0.75rem 1.5rem; }
 }
+
+/* â”€â”€ TICKER BAR â”€â”€ */
+.ticker-bar {
+  background: #111111;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ticker-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.ticker-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  white-space: nowrap;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ticker-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.ticker-price {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticker-change {
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticker-change.up { color: #4ade80; }
+.ticker-change.down { color: #f87171; }
+
+.ticker-timestamp {
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: #555555;
+  letter-spacing: 0.05em;
+}
