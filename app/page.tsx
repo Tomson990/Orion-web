@@ -28,6 +28,13 @@ interface PriceData {
   changePct: number;
 }
 
+interface NewsItem {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+}
+
 function parseBriefingBody(text: string): string {
   const lines = text.split("\n");
   const startIdx = lines.findIndex(l => l.includes("ORION ENERGY INTELLIGENCE"));
@@ -80,12 +87,26 @@ function parseBriefingBody(text: string): string {
   return html;
 }
 
+function timeAgo(dateStr: string): string {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h > 23) return `${Math.floor(h / 24)}d ago`;
+    if (h > 0) return `${h}h ago`;
+    return `${m}m ago`;
+  } catch {
+    return "";
+  }
+}
+
 export default function Home() {
   const [briefingText, setBriefingText] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [filename, setFilename] = useState<string>("");
   const [prices, setPrices] = useState<PriceData[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
     async function loadBriefing() {
@@ -113,8 +134,19 @@ export default function Home() {
       }
     }
 
+    async function loadNews() {
+      try {
+        const res = await fetch("/api/news");
+        const data = await res.json();
+        setNews(data.articles || []);
+      } catch {
+        // news optional
+      }
+    }
+
     loadBriefing();
     loadPrices();
+    loadNews();
   }, []);
 
   const bodyHtml = briefingText ? parseBriefingBody(briefingText) : "";
@@ -168,6 +200,30 @@ export default function Home() {
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
           </>
+        )}
+
+        {news.length > 0 && (
+          <section className="news-section">
+            <div className="news-header">
+              <span className="news-eyebrow">Live Feed</span>
+              <h2 className="news-title">Energy News</h2>
+            </div>
+            <div className="news-grid">
+              {news.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="news-card"
+                >
+                  <div className="news-card-source">{item.source}</div>
+                  <div className="news-card-title">{item.title}</div>
+                  <div className="news-card-time">{timeAgo(item.publishedAt)}</div>
+                </a>
+              ))}
+            </div>
+          </section>
         )}
       </main>
 
