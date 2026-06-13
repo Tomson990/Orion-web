@@ -2,24 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const GITHUB_RAW = "https://raw.githubusercontent.com/Tomson990/Orion/main/orion";
-
-function getTodayFilename() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `briefing_${yyyy}-${mm}-${dd}.txt`;
-}
-
-function formatDate(filename: string) {
-  const match = filename.match(/briefing_(\d{4}-\d{2}-\d{2})\.txt/);
-  if (!match) return "";
-  const [yyyy, mm, dd] = match[1].split("-");
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  return `${months[parseInt(mm)-1]} ${parseInt(dd)}, ${yyyy}`;
-}
-
 interface PriceData {
   key: string;
   name: string;
@@ -36,34 +18,35 @@ interface NewsItem {
 }
 
 function parseBriefingBody(text: string): string {
-  // Normalizar separadores
   let cleaned = text
     .replace(/={3,}/g, "")
     .replace(/---/g, "\n---\n")
     .replace(/## /g, "\n## ")
-    .replace(/\*\*([^*]+):\*\*/g, "\n**$1:**")
+    .replace(/\*\*([^*]+):\*\*/g, "\n**$1:**");
 
-  const lines = cleaned.split(/\n/)
-  let html = ""
+  const lines = cleaned.split(/\n/);
+  let html = "";
 
   for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) { html += "<br/>"; continue }
+    const trimmed = line.trim();
+    if (!trimmed) { html += "<br/>"; continue; }
 
     if (trimmed.startsWith("## ")) {
-      const content = trimmed.replace(/^## /, "")
-      const levelMatch = content.match(/— NIVEL: (ALTA|MEDIA|BAJA)/i)
-      const title = content.replace(/— NIVEL: (ALTA|MEDIA|BAJA)/i, "").trim()
-      let badge = ""
+      const content = trimmed.replace(/^## /, "");
+      const levelMatch = content.match(/— (HIGH|MEDIUM|LOW|ALTA|MEDIA|BAJA)/i);
+      const title = content.replace(/— (HIGH|MEDIUM|LOW|ALTA|MEDIA|BAJA)/i, "").trim();
+      let badge = "";
       if (levelMatch) {
-        const level = levelMatch[1].toLowerCase()
-        badge = `<span class="level-${level}">${levelMatch[1]}</span>`
+        const level = levelMatch[1].toUpperCase();
+        const cls = level === "HIGH" || level === "ALTA" ? "alta" :
+                    level === "MEDIUM" || level === "MEDIA" ? "media" : "baja";
+        badge = `<span class="level-${cls}">${level}</span>`;
       }
-      html += `<h2>${title}${badge}</h2>`
-      continue
+      html += `<h2>${title}${badge}</h2>`;
+      continue;
     }
 
-    if (trimmed === "---") { html += "<hr/>"; continue }
+    if (trimmed === "---") { html += "<hr/>"; continue; }
 
     if (
       trimmed === trimmed.toUpperCase() &&
@@ -71,15 +54,15 @@ function parseBriefingBody(text: string): string {
       !trimmed.startsWith("**") &&
       !trimmed.match(/^\d/)
     ) {
-      html += `<p class="section-title">${trimmed}</p>`
-      continue
+      html += `<p class="section-title">${trimmed}</p>`;
+      continue;
     }
 
-    const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    html += `<p>${boldLine}</p>`
+    const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    html += `<p>${boldLine}</p>`;
   }
 
-  return html
+  return html;
 }
 
 function timeAgo(dateStr: string): string {
@@ -93,23 +76,25 @@ function timeAgo(dateStr: string): string {
   } catch { return ""; }
 }
 
+function getToday(): string {
+  const d = new Date();
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
 export default function Home() {
   const [briefingText, setBriefingText] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
-  const [filename, setFilename] = useState<string>("");
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
     async function loadBriefing() {
-      const today = getTodayFilename();
-      setFilename(today);
       try {
-        const res = await fetch(`${GITHUB_RAW}/${today}`);
-        if (!res.ok) throw new Error("Briefing not available yet");
-        const text = await res.text();
-        setBriefingText(text);
+        const res = await fetch("/api/briefing");
+        if (!res.ok) throw new Error("Briefing not available");
+        const data = await res.json();
+        setBriefingText(data.briefing || "");
       } catch {
         setError("Today's briefing is not available yet. Check back soon.");
       } finally {
@@ -139,7 +124,6 @@ export default function Home() {
   }, []);
 
   const bodyHtml = briefingText ? parseBriefingBody(briefingText) : "";
-  const dateLabel = formatDate(filename);
 
   return (
     <>
@@ -173,19 +157,19 @@ export default function Home() {
 
       {/* MAIN — briefing */}
       <main className="main-content">
-        {loading && <div className="loading-state">Loading today's briefing...</div>}
+        {loading && <div className="loading-state">Generating energy intelligence briefing...</div>}
         {error && !loading && <div className="loading-state">{error}</div>}
         {!loading && !error && briefingText && (
           <>
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
-            <div className="briefing-date">{dateLabel}</div>
+            <div className="briefing-date">{getToday()}</div>
             <div className="briefing-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
           </>
         )}
       </main>
 
-      {/* NEWS — full width */}
+      {/* NEWS */}
       {news.length > 0 && (
         <section className="news-section">
           <div className="news-section-inner">
