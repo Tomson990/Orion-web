@@ -1,88 +1,114 @@
 import { NextResponse } from "next/server";
 
-const TICKERS = [
-  { key: "brent",     ticker: "BZ=F",   name: "Brent Crude",  unit: "USD/bbl" },
-  { key: "wti",       ticker: "CL=F",   name: "WTI Crude",    unit: "USD/bbl" },
-  { key: "ttf",       ticker: "TTF=F",  name: "TTF Gas",      unit: "EUR/MWh" },
-  { key: "henry_hub", ticker: "NG=F",   name: "Henry Hub",    unit: "USD/MMBtu" },
-  { key: "copper",    ticker: "HG=F",   name: "Copper",       unit: "USD/lb" },
+const FEEDS = [
+  {
+    url: "https://www.rigzone.com/news/rss/rigzone_latest.aspx",
+    source: "Rigzone",
+  },
+  {
+    url: "https://oilprice.com/rss/main",
+    source: "OilPrice",
+  },
+  {
+    url: "https://www.naturalgasintel.com/feed/",
+    source: "Natural Gas Intel",
+  },
+  {
+    url: "https://www.spglobal.com/commodityinsights/en/rss-feed/oil",
+    source: "S&P Global",
+  },
+  {
+    url: "https://feeds.reuters.com/reuters/businessNews",
+    source: "Reuters Business",
+  },
 ];
 
-async function fetchPrice(ticker: string) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
+interface NewsItem {
+  title: string;
+  url: string;
+  source: string;
+  published_at: string | null;
+  summary: string;
+}
+
+function cleanHtml(raw: string): string {
+  return raw
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseItems(xml: string, source: string): NewsItem[] {
+  const items: NewsItem[] = [];
+  const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
+
+  for (const match of itemMatches) {
+    const block = match[1];
+
+    const titleMatch = block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) ||
+                       block.match(/<title>(.*?)<\/title>/);
+    const linkMatch  = block.match(/<link>(.*?)<\/link>/) ||
+                       block.match(/<guid>(.*?)<\/guid>/);
+    const descMatch  = block.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) ||
+                       block.match(/<description>(.*?)<\/description>/);
+    const dateMatch  = block.match(/<pubDate>(.*?)<\/pubDate>/);
+
+    const title = titleMatch ? cleanHtml(titleMatch[1]) : "";
+    const url   = linkMatch  ? linkMatch[1].trim() : "";
+    const summary = descMatch ? cleanHtml(descMatch[1]).slice(0, 200) : "";
+    const published_at = dateMatch ? dateMatch[1].trim() : null;
+
+    if (title && url) {
+      items.push({ title, url, source, published_at, summary });
+    }
+
+    if (items.length >= 5) break; // máximo 5 por fuente
+  }
+
+  return items;
+}
+
+async function fetchFeed(feed: { url: string; source: string }): Promise<NewsItem[]> {
   try {
-    const res = await fetch(url, {
+    const res = await fetch(feed.url, {
       headers: { "User-Agent": "Mozilla/5.0" },
-      next: { revalidate: 300 },
+      next: { revalidate: 900 }, // cache 15 minutos
     });
-    const data = await res.json();
-    const result = data?.chart?.result?.[0];
-    if (!result) return null;
-    const closes = (result.indicators?.quote?.[0]?.close || []).filter(Boolean);
-    if (closes.length < 2) return null;
-    const price = closes[closes.length - 1];
-    const prev = closes[closes.length - 2];
-    const changePct = ((price - prev) / prev) * 100;
-    return {
-      price: Math.round(price * 100) / 100,
-      changePct: Math.round(changePct * 10) / 10,
-    };
+    if (!res.ok) return [];
+    const xml = await res.text();
+    return parseItems(xml, feed.source);
   } catch {
-    return null;
+    return [];
   }
 }
 
 export async function GET() {
-  const now = new Date().toISOString();
-  const results = await Promise.all(
-    TICKERS.map(async (t) => {
-      const data = await fetchPrice(t.ticker);
-      return { ...t, price: data?.price ?? null, changePct: data?.changePct ?? null };
-    })
+  const results = await Promise.allSettled(
+    FEEDS.map((f) => fetchFeed(f))
   );
 
-  const valid = results.filter((r) => r.price !== null);
-
-  const brent = valid.find(r => r.key === "brent");
-  const ttf = valid.find(r => r.key === "ttf");
-  const copper = valid.find(r => r.key === "copper");
-
-  let riskScore = 50;
-  if (brent?.changePct && brent.changePct > 1) riskScore += 10;
-  if (brent?.changePct && brent.changePct < -1) riskScore -= 10;
-  if (ttf?.changePct && ttf.changePct > 2) riskScore += 15;
-  if (ttf?.changePct && ttf.changePct < -2) riskScore -= 10;
-  if (copper?.changePct && copper.changePct > 1.5) riskScore += 5;
-  riskScore = Math.min(100, Math.max(0, riskScore));
-
-  const riskLevel = riskScore >= 70 ? "ALTO" : riskScore >= 40 ? "MEDIO" : "BAJO";
-
-  let text = `ORION Energy Intelligence - AES Supply Chain\n`;
-  text += `Actualizado: ${now}\n\n`;
-  text += `COMMODITIES:\n`;
-
-  for (const r of valid) {
-    const trend = r.changePct && r.changePct > 0 ? `↑ +${r.changePct}%` : `↓ ${r.changePct}%`;
-    text += `${r.name}: ${r.price} ${r.unit} | ${trend}\n`;
+  const allNews: NewsItem[] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      allNews.push(...result.value);
+    }
   }
 
-  text += `\nRISK PRESSURE INDEX: ${riskScore}/100 - ${riskLevel}\n`;
-  text += `Drivers: variaciones en Brent, TTF y Copper en las últimas 24hs.\n\n`;
-  text += `IMPACTO SUPPLY CHAIN AES:\n`;
+  // Ordenar por fecha descendente
+  allNews.sort((a, b) => {
+    if (!a.published_at) return 1;
+    if (!b.published_at) return -1;
+    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+  });
 
-  if (brent && brent.price) {
-    if (brent.price > 90) text += `- Brent elevado: presion en costos logisticos y fletes internacionales.\n`;
-    else text += `- Brent moderado: costos logisticos estables.\n`;
-  }
-  if (ttf && ttf.price) {
-    if (ttf.price > 30) text += `- TTF alto: impacto en generacion y contratos de gas en Europa.\n`;
-    else text += `- TTF moderado: costos de gas bajo control.\n`;
-  }
-  if (copper && copper.price) {
-    text += `- Copper a ${copper.price} USD/lb: referencia para equipos electricos y transformadores.\n`;
-  }
-
-  return new NextResponse(text, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  return NextResponse.json({
+    updated_at: new Date().toISOString(),
+    count: allNews.length,
+    news: allNews.slice(0, 20), // máximo 20 noticias en total
   });
 }
