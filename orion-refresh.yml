@@ -1,0 +1,28 @@
+name: ORION Refresh
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Cada 15 minutos
+  workflow_dispatch:          # También permite correrlo manualmente
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping ORION API
+        run: |
+          echo "Refreshing ORION at $(date)"
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://orion-web-kappa.vercel.app/api/summary)
+          echo "HTTP Status: $response"
+          if [ "$response" != "200" ]; then
+            echo "ERROR: ORION returned status $response"
+            exit 1
+          fi
+          echo "ORION refresh successful"
+
+      - name: Log commodity data
+        run: |
+          echo "--- ORION Response ---"
+          curl -s https://orion-web-kappa.vercel.app/api/summary
+          echo "--- End ---"
