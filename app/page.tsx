@@ -37,7 +37,10 @@ interface NewsItem {
 
 function parseBriefingBody(text: string): string {
   const lines = text.split("\n");
-  const startIdx = lines.findIndex(l => l.includes("ORION ENERGY INTELLIGENCE"));
+  const startIdx = lines.findIndex(l => 
+  l.includes("ORION ENERGY INTELLIGENCE") || 
+  l.includes("BRIEFING NARRATIVO")
+);
   if (startIdx === -1) return text;
 
   const bodyLines = lines.slice(startIdx + 2);
