@@ -402,3 +402,17 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── NEWS SECTION INNER ── */
+.news-section {
+  background: #f5f4f0;
+  border-top: 1px solid var(--rule);
+  padding: 48px 0 64px;
+  margin-top: 0;
+}
+
+.news-section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
