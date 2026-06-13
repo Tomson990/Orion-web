@@ -69,33 +69,32 @@ async function generateBriefing(articles: Article[]): Promise<string> {
 
 Hoy es ${today}.
 
-Analizá estas noticias recientes del sector energético y generá un briefing de inteligencia conciso:
+Analiza estas noticias recientes del sector energético y genera un briefing de inteligencia conciso:
 
 ${articlesText}
 
-Generá un briefing con este formato exacto:
+Genera un briefing con este formato exacto:
 
 ORION ENERGY INTELLIGENCE
 ${today}
 
-## 1. [TÍTULO DE LA NARRATIVA] — [ALTA/MEDIA/BAJA]
+## 1. [TITULO DE LA NARRATIVA] - [ALTA/MEDIA/BAJA]
 
-**Qué está pasando:** [2-3 oraciones]
-**Por qué importa:** [1-2 oraciones sobre implicancias en cadena de suministro o costos]
-**Señal vs ruido:** [1 oración]
+**Que esta pasando:** [2-3 oraciones]
+**Por que importa:** [1-2 oraciones sobre implicancias en cadena de suministro o costos]
+**Senal vs ruido:** [1 oracion]
 
 ---
 
-[Repetir para 3-4 narrativas más importantes]
+[Repetir para 3-4 narrativas mas importantes]
 
 TENSIONES ACTIVAS
-[Si hay señales contradictorias entre fuentes, listarlas brevemente]
+[Si hay senales contradictorias entre fuentes, listarlas brevemente]
 
-SÍNTESIS EJECUTIVA
-[3-4 oraciones sobre el panorama energético global hoy]
+SINTESIS EJECUTIVA
+[3-4 oraciones sobre el panorama energetico global hoy]
 
-Enfocate en: señales de precios, disrupciones de suministro, riesgos geopolíticos para el suministro energético, señales de transición hacia energías renovables. Sé directo y accionable.`;
-
+Enfocate en: senales de precios, disrupciones de suministro, riesgos geopoliticos para el suministro energetico, senales de transicion hacia energias renovables. Se directo y accionable.`;
 Today is ${today}.
 
 Analyze these recent energy sector news articles and generate a concise intelligence briefing:
