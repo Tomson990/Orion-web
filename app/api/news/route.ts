@@ -21,6 +21,11 @@ const FEEDS = [
     url: "https://feeds.reuters.com/reuters/businessNews",
     source: "Reuters Business",
   },
+  { url: "https://www.rechargenews.com/rss", source: "Recharge News" },
+{ url: "https://www.pv-magazine.com/feed/", source: "PV Magazine" },
+{ url: "https://www.energymonitor.ai/feed/", source: "Energy Monitor" },
+{ url: "https://cleantechnica.com/feed/", source: "CleanTechnica" },
+{ url: "https://electrek.co/feed/", source: "Electrek" },
 ];
 
 interface NewsItem {
