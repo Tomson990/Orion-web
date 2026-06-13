@@ -33,10 +33,12 @@ async function fetchFeed(url: string, source: string): Promise<Article[]> {
     const itemMatches = text.match(/<item>([\s\S]*?)<\/item>/g) || [];
 
     for (const item of itemMatches.slice(0, 5)) {
-      const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
-                    item.match(/<title>(.*?)<\/title>/)?.[1] || "";
-      const summary = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] ||
-                      item.match(/<description>(.*?)<\/description>/)?.[1] || "";
+      const title =
+        item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
+        item.match(/<title>(.*?)<\/title>/)?.[1] || "";
+      const summary =
+        item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] ||
+        item.match(/<description>(.*?)<\/description>/)?.[1] || "";
       const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
 
       if (title) {
@@ -61,68 +63,32 @@ async function generateBriefing(articles: Article[]): Promise<string> {
     .map((a, i) => `${i + 1}. [${a.source}] ${a.title}\n   ${a.summary}`)
     .join("\n\n");
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", year: "numeric", month: "long", day: "numeric"
+  const today = new Date().toLocaleDateString("es-AR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
-  const prompt = `Sos un analista de inteligencia del sector energético especializado en cadenas de suministro globales, mercados de commodities y transición energética.
-
-Hoy es ${today}.
-
-Analiza estas noticias recientes del sector energético y genera un briefing de inteligencia conciso:
-
-${articlesText}
-
-Genera un briefing con este formato exacto:
-
-ORION ENERGY INTELLIGENCE
-${today}
-
-## 1. [TITULO DE LA NARRATIVA] - [ALTA/MEDIA/BAJA]
-
-**Que esta pasando:** [2-3 oraciones]
-**Por que importa:** [1-2 oraciones sobre implicancias en cadena de suministro o costos]
-**Senal vs ruido:** [1 oracion]
-
----
-
-[Repetir para 3-4 narrativas mas importantes]
-
-TENSIONES ACTIVAS
-[Si hay senales contradictorias entre fuentes, listarlas brevemente]
-
-SINTESIS EJECUTIVA
-[3-4 oraciones sobre el panorama energetico global hoy]
-
-Enfocate en: senales de precios, disrupciones de suministro, riesgos geopoliticos para el suministro energetico, senales de transicion hacia energias renovables. Se directo y accionable.`;
-Today is ${today}.
-
-Analyze these recent energy sector news articles and generate a concise intelligence briefing:
-
-${articlesText}
-
-Generate a briefing with this exact format:
-
-ORION ENERGY INTELLIGENCE
-${today}
-
-## 1. [NARRATIVE TITLE] — [HIGH/MEDIUM/LOW]
-
-**What's happening:** [2-3 sentences]
-**Why it matters:** [1-2 sentences on supply chain or cost implications]
-**Signal vs noise:** [1 sentence]
-
----
-
-[Repeat for 3-4 most important narratives]
-
-ACTIVE TENSIONS
-[If contradictory signals exist between sources, list them briefly]
-
-EXECUTIVE SUMMARY
-[3-4 sentences on the overall energy market picture today]
-
-Focus on: price signals, supply disruptions, geopolitical risks to energy supply, renewable energy transition signals. Be direct and actionable.`;
+  const prompt =
+    "Sos un analista de inteligencia del sector energetico especializado en cadenas de suministro globales, mercados de commodities y transicion energetica.\n\n" +
+    "Hoy es " + today + ".\n\n" +
+    "Analiza estas noticias recientes del sector energetico y genera un briefing de inteligencia conciso:\n\n" +
+    articlesText + "\n\n" +
+    "Genera un briefing con este formato exacto:\n\n" +
+    "ORION ENERGY INTELLIGENCE\n" +
+    today + "\n\n" +
+    "## 1. [TITULO DE LA NARRATIVA] - [ALTA/MEDIA/BAJA]\n\n" +
+    "**Que esta pasando:** [2-3 oraciones]\n" +
+    "**Por que importa:** [1-2 oraciones sobre implicancias en cadena de suministro o costos]\n" +
+    "**Senal vs ruido:** [1 oracion]\n\n" +
+    "---\n\n" +
+    "[Repetir para 3-4 narrativas mas importantes]\n\n" +
+    "TENSIONES ACTIVAS\n" +
+    "[Si hay senales contradictorias entre fuentes, listarlas brevemente]\n\n" +
+    "SINTESIS EJECUTIVA\n" +
+    "[3-4 oraciones sobre el panorama energetico global hoy]\n\n" +
+    "Enfocate en: senales de precios, disrupciones de suministro, riesgos geopoliticos para el suministro energetico, senales de transicion hacia energias renovables. Se directo y accionable. Responde en español.";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -145,7 +111,6 @@ Focus on: price signals, supply disruptions, geopolitical risks to energy supply
 
 export async function GET() {
   try {
-    // Fetch all feeds in parallel
     const allArticles = (
       await Promise.all(FEEDS.map((f) => fetchFeed(f.url, f.source)))
     ).flat();
@@ -154,7 +119,6 @@ export async function GET() {
       return NextResponse.json({ error: "No articles available" }, { status: 503 });
     }
 
-    // Generate briefing with Claude
     const briefing = await generateBriefing(allArticles.slice(0, 25));
 
     if (!briefing) {
