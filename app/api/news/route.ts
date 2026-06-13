@@ -26,6 +26,18 @@ const FEEDS = [
 { url: "https://www.energymonitor.ai/feed/", source: "Energy Monitor" },
 { url: "https://cleantechnica.com/feed/", source: "CleanTechnica" },
 { url: "https://electrek.co/feed/", source: "Electrek" },
+  // Logística y supply chain
+{ url: "https://www.freightwaves.com/news/feed", source: "FreightWaves" },
+{ url: "https://www.supplychaindive.com/feeds/news/", source: "Supply Chain Dive" },
+{ url: "https://www.joc.com/rss/all", source: "Journal of Commerce" },
+
+// Comercio exterior
+{ url: "https://www.tradefinanceglobal.com/feed/", source: "Trade Finance Global" },
+{ url: "https://www.globaltradereviews.com/feed", source: "Global Trade Review" },
+
+// América Latina
+{ url: "https://portalportuario.cl/feed/", source: "Portal Portuario" },
+{ url: "https://www.valor.com.br/rss", source: "Valor Economico" },
 ];
 
 interface NewsItem {
