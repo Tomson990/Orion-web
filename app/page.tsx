@@ -32,7 +32,7 @@ interface NewsItem {
   title: string;
   url: string;
   source: string;
-  publishedAt: string;
+  published_at: string;
 }
 
 function parseBriefingBody(text: string): string {
@@ -46,10 +46,7 @@ function parseBriefingBody(text: string): string {
   for (const line of bodyLines) {
     const trimmed = line.trim();
 
-    if (!trimmed) {
-      html += "<br/>";
-      continue;
-    }
+    if (!trimmed) { html += "<br/>"; continue; }
 
     if (trimmed.startsWith("## ")) {
       const content = trimmed.replace(/^## /, "");
@@ -75,10 +72,7 @@ function parseBriefingBody(text: string): string {
       continue;
     }
 
-    if (trimmed === "---") {
-      html += "<hr/>";
-      continue;
-    }
+    if (trimmed === "---") { html += "<hr/>"; continue; }
 
     const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     html += `<p>${boldLine}</p>`;
@@ -95,9 +89,7 @@ function timeAgo(dateStr: string): string {
     if (h > 23) return `${Math.floor(h / 24)}d ago`;
     if (h > 0) return `${h}h ago`;
     return `${m}m ago`;
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 }
 
 export default function Home() {
@@ -129,19 +121,15 @@ export default function Home() {
         const res = await fetch("/api/prices");
         const data = await res.json();
         setPrices(data);
-      } catch {
-        // prices optional
-      }
+      } catch { /* prices optional */ }
     }
 
     async function loadNews() {
       try {
         const res = await fetch("/api/news");
         const data = await res.json();
-        setNews(data.articles || []);
-      } catch {
-        // news optional
-      }
+        setNews(data.articles || data || []);
+      } catch { /* news optional */ }
     }
 
     loadBriefing();
@@ -154,6 +142,7 @@ export default function Home() {
 
   return (
     <>
+      {/* TICKER */}
       {prices.length > 0 && (
         <div className="ticker-bar">
           <div className="ticker-inner">
@@ -173,6 +162,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* HEADER */}
       <header className="site-header">
         <div className="site-header-inner">
           <a href="/" className="site-logo">ORION</a>
@@ -180,30 +170,24 @@ export default function Home() {
         </div>
       </header>
 
+      {/* MAIN — briefing */}
       <main className="main-content">
-        {loading && (
-          <div className="loading-state">Loading today's briefing...</div>
-        )}
-
-        {error && !loading && (
-          <div className="loading-state">{error}</div>
-        )}
-
+        {loading && <div className="loading-state">Loading today's briefing...</div>}
+        {error && !loading && <div className="loading-state">{error}</div>}
         {!loading && !error && briefingText && (
           <>
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
             <div className="briefing-date">{dateLabel}</div>
-
-            <div
-              className="briefing-body"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
-            />
+            <div className="briefing-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
           </>
         )}
+      </main>
 
-        {news.length > 0 && (
-          <section className="news-section">
+      {/* NEWS — full width */}
+      {news.length > 0 && (
+        <section className="news-section">
+          <div className="news-section-inner">
             <div className="news-header">
               <span className="news-eyebrow">Live Feed</span>
               <h2 className="news-title">Energy News</h2>
@@ -219,14 +203,15 @@ export default function Home() {
                 >
                   <div className="news-card-source">{item.source}</div>
                   <div className="news-card-title">{item.title}</div>
-                  <div className="news-card-time">{timeAgo(item.publishedAt)}</div>
+                  <div className="news-card-time">{timeAgo(item.published_at)}</div>
                 </a>
               ))}
             </div>
-          </section>
-        )}
-      </main>
+          </div>
+        </section>
+      )}
 
+      {/* FOOTER */}
       <footer className="site-footer">
         <div className="site-footer-inner">
           <span className="footer-text">ORION · Global Energy Intelligence · {new Date().getFullYear()}</span>
