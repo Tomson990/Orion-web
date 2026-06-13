@@ -128,7 +128,7 @@ export default function Home() {
       try {
         const res = await fetch("/api/news");
         const data = await res.json();
-        setNews(data.articles || data || []);
+        setNews(data.news || data.articles || []);
       } catch { /* news optional */ }
     }
 
