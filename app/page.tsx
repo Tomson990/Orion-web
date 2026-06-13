@@ -36,52 +36,50 @@ interface NewsItem {
 }
 
 function parseBriefingBody(text: string): string {
-  const lines = text.split("\n");
-  const startIdx = lines.findIndex(l => 
-  l.includes("ORION ENERGY INTELLIGENCE") || 
-  l.includes("BRIEFING NARRATIVO")
-);
-  if (startIdx === -1) return text;
+  // Normalizar separadores
+  let cleaned = text
+    .replace(/={3,}/g, "")
+    .replace(/---/g, "\n---\n")
+    .replace(/## /g, "\n## ")
+    .replace(/\*\*([^*]+):\*\*/g, "\n**$1:**")
 
-  const bodyLines = lines.slice(startIdx + 2);
-  let html = "";
+  const lines = cleaned.split(/\n/)
+  let html = ""
 
-  for (const line of bodyLines) {
-    const trimmed = line.trim();
-
-    if (!trimmed) { html += "<br/>"; continue; }
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed) { html += "<br/>"; continue }
 
     if (trimmed.startsWith("## ")) {
-      const content = trimmed.replace(/^## /, "");
-      const levelMatch = content.match(/— NIVEL: (ALTA|MEDIA|BAJA)/i);
-      const title = content.replace(/— NIVEL: (ALTA|MEDIA|BAJA)/i, "").trim();
-      let badge = "";
+      const content = trimmed.replace(/^## /, "")
+      const levelMatch = content.match(/— NIVEL: (ALTA|MEDIA|BAJA)/i)
+      const title = content.replace(/— NIVEL: (ALTA|MEDIA|BAJA)/i, "").trim()
+      let badge = ""
       if (levelMatch) {
-        const level = levelMatch[1].toLowerCase();
-        badge = `<span class="level-${level}">${levelMatch[1]}</span>`;
+        const level = levelMatch[1].toLowerCase()
+        badge = `<span class="level-${level}">${levelMatch[1]}</span>`
       }
-      html += `<h2>${title}${badge}</h2>`;
-      continue;
+      html += `<h2>${title}${badge}</h2>`
+      continue
     }
+
+    if (trimmed === "---") { html += "<hr/>"; continue }
 
     if (
       trimmed === trimmed.toUpperCase() &&
       trimmed.length > 3 &&
       !trimmed.startsWith("**") &&
-      !trimmed.startsWith("-") &&
       !trimmed.match(/^\d/)
     ) {
-      html += `<p class="section-title">${trimmed}</p>`;
-      continue;
+      html += `<p class="section-title">${trimmed}</p>`
+      continue
     }
 
-    if (trimmed === "---") { html += "<hr/>"; continue; }
-
-    const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    html += `<p>${boldLine}</p>`;
+    const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    html += `<p>${boldLine}</p>`
   }
 
-  return html;
+  return html
 }
 
 function timeAgo(dateStr: string): string {
