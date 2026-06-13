@@ -65,7 +65,36 @@ async function generateBriefing(articles: Article[]): Promise<string> {
     weekday: "long", year: "numeric", month: "long", day: "numeric"
   });
 
-  const prompt = `You are an energy sector intelligence analyst specializing in global supply chains, commodity markets, and the energy transition.
+  const prompt = `Sos un analista de inteligencia del sector energético especializado en cadenas de suministro globales, mercados de commodities y transición energética.
+
+Hoy es ${today}.
+
+Analizá estas noticias recientes del sector energético y generá un briefing de inteligencia conciso:
+
+${articlesText}
+
+Generá un briefing con este formato exacto:
+
+ORION ENERGY INTELLIGENCE
+${today}
+
+## 1. [TÍTULO DE LA NARRATIVA] — [ALTA/MEDIA/BAJA]
+
+**Qué está pasando:** [2-3 oraciones]
+**Por qué importa:** [1-2 oraciones sobre implicancias en cadena de suministro o costos]
+**Señal vs ruido:** [1 oración]
+
+---
+
+[Repetir para 3-4 narrativas más importantes]
+
+TENSIONES ACTIVAS
+[Si hay señales contradictorias entre fuentes, listarlas brevemente]
+
+SÍNTESIS EJECUTIVA
+[3-4 oraciones sobre el panorama energético global hoy]
+
+Enfocate en: señales de precios, disrupciones de suministro, riesgos geopolíticos para el suministro energético, señales de transición hacia energías renovables. Sé directo y accionable.`;
 
 Today is ${today}.
 
