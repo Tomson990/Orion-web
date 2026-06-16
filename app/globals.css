@@ -403,6 +403,35 @@ body {
   }
 }
 
+/* ── BRIEFING TABLE ── */
+.briefing-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.briefing-body th,
+.briefing-body td {
+  border: 1px solid var(--rule);
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.briefing-body th {
+  background: var(--signal-faint);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+.briefing-body tr:nth-child(even) td {
+  background: #f5f4f0;
+}
+
 /* ── NEWS SECTION INNER ── */
 .news-section {
   background: #f5f4f0;
