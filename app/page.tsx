@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface PriceData {
   key: string;
@@ -15,50 +17,6 @@ interface NewsItem {
   url: string;
   source: string;
   published_at: string;
-}
-
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-
-  const lines = cleaned.split(/\n/);
-  let html = "";
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) { html += "<br/>"; continue; }
-
-    if (trimmed.startsWith("## ")) {
-      const content = trimmed.replace(/^## /, "");
-      const levelMatch = content.match(/— (HIGH|MEDIUM|LOW|ALTA|MEDIA|BAJA)/i);
-      const title = content.replace(/— (HIGH|MEDIUM|LOW|ALTA|MEDIA|BAJA)/i, "").trim();
-      let badge = "";
-      if (levelMatch) {
-        const level = levelMatch[1].toUpperCase();
-        const cls = level === "HIGH" || level === "ALTA" ? "alta" :
-                    level === "MEDIUM" || level === "MEDIA" ? "media" : "baja";
-        badge = `<span class="level-${cls}">${level}</span>`;
-      }
-      html += `<h2>${title}${badge}</h2>`;
-      continue;
-    }
-
-    if (trimmed === "---") { html += "<hr/>"; continue; }
-
-    if (
-      trimmed === trimmed.toUpperCase() &&
-      trimmed.length > 3 &&
-      !trimmed.startsWith("**") &&
-      !trimmed.match(/^\d/)
-    ) {
-      html += `<p class="section-title">${trimmed}</p>`;
-      continue;
-    }
-
-    const boldLine = trimmed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    html += `<p>${boldLine}</p>`;
-  }
-
-  return html;
 }
 
 function timeAgo(dateStr: string): string {
@@ -119,8 +77,6 @@ export default function Home() {
     loadNews();
   }, []);
 
-  const bodyHtml = briefingText ? parseBriefingBody(briefingText) : "";
-
   return (
     <>
       {/* TICKER */}
@@ -161,10 +117,10 @@ export default function Home() {
             <h1 className="briefing-title">Global Energy Intelligence</h1>
             <div className="briefing-date">{getToday()}</div>
             <div className="briefing-body">
-  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-    {briefingText}
-  </ReactMarkdown>
-</div>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {briefingText}
+              </ReactMarkdown>
+            </div>
           </>
         )}
       </main>
