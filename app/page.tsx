@@ -17,12 +17,8 @@ interface NewsItem {
   published_at: string;
 }
 
-function parseBriefingBody(text: string): string {
-  let cleaned = text
-    .replace(/={3,}/g, "")
-    .replace(/---/g, "\n---\n")
-    .replace(/## /g, "\n## ")
-    .replace(/\*\*([^*]+):\*\*/g, "\n**$1:**");
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
   const lines = cleaned.split(/\n/);
   let html = "";
@@ -164,7 +160,11 @@ export default function Home() {
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
             <div className="briefing-date">{getToday()}</div>
-            <div className="briefing-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+            <div className="briefing-body">
+  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+    {briefingText}
+  </ReactMarkdown>
+</div>
           </>
         )}
       </main>
