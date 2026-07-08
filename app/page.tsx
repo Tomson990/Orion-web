@@ -1,24 +1,13 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+const supabase = createClient(
+  "https://jmrwyluomrranyetgecw.supabase.co",
+  "sb_publishable_WJtPwj9Ufax4Y9kZYSUhdA_qCvsb89-"
+);
 
 const GITHUB_RAW = "https://raw.githubusercontent.com/Tomson990/Orion/main/orion/briefings";
-
-function getTodayFilename() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `briefing_${yyyy}-${mm}-${dd}.txt`;
-}
-
-function formatDate(filename: string) {
-  const match = filename.match(/briefing_(\d{4}-\d{2}-\d{2})\.txt/);
-  if (!match) return "";
-  const [yyyy, mm, dd] = match[1].split("-");
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  return `${months[parseInt(mm)-1]} ${parseInt(dd)}, ${yyyy}`;
-}
 
 interface PriceData {
   key: string;
@@ -39,6 +28,22 @@ const TRADE_INDEX_LABELS: Record<string, string> = {
   SCFI: "Shanghai SCFI",
   BAI00: "Freightos Air",
 };
+
+function getTodayFilename() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `briefing_${yyyy}-${mm}-${dd}.txt`;
+}
+
+function formatDate(filename: string) {
+  const match = filename.match(/briefing_(\d{4}-\d{2}-\d{2})\.txt/);
+  if (!match) return "";
+  const [yyyy, mm, dd] = match[1].split("-");
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return `${months[parseInt(mm)-1]} ${parseInt(dd)}, ${yyyy}`;
+}
 
 function parseBriefingBody(text: string): string {
   const lines = text.split("\n");
@@ -92,57 +97,93 @@ function parseBriefingBody(text: string): string {
   return html;
 }
 
-export default function Home() {
-  const [briefingText, setBriefingText] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [filename, setFilename] = useState<string>("");
-  const [prices, setPrices] = useState<PriceData[]>([]);
-  const [tradeIndices, setTradeIndices] = useState<Record<string, TradeIndexData>>({});
+async function getPrices(): Promise<PriceData[]> {
+  const TICKERS = [
+    { key: "brent", ticker: "BZ=F", name: "Brent Crude", unit: "USD/bbl" },
+    { key: "wti", ticker: "CL=F", name: "WTI Crude", unit: "USD/bbl" },
+    { key: "ttf", ticker: "TTF=F", name: "TTF Gas", unit: "EUR/MWh" },
+    { key: "henry_hub", ticker: "NG=F", name: "Henry Hub", unit: "USD/MMBtu" },
+    { key: "copper", ticker: "HG=F", name: "Copper", unit: "USD/lb" },
+  ];
 
-  useEffect(() => {
-    async function loadBriefing() {
-      const today = getTodayFilename();
-      setFilename(today);
+  const results = await Promise.all(
+    TICKERS.map(async (t): Promise<PriceData | null> => {
       try {
-        const res = await fetch(`${GITHUB_RAW}/${today}`);
-        if (!res.ok) throw new Error("Briefing not available yet");
-        const text = await res.text();
-        setBriefingText(text);
-      } catch {
-        setError("Today's briefing is not available yet. Check back soon.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    async function loadPrices() {
-      try {
-        const res = await fetch("/api/prices");
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${t.ticker}?interval=1d&range=5d`;
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0" },
+          cache: "no-store",
+        });
         const data = await res.json();
-        setPrices(data);
+        const result = data?.chart?.result?.[0];
+        if (!result) return null;
+        const closes = (result.indicators?.quote?.[0]?.close || []).filter(Boolean);
+        if (closes.length < 2) return null;
+        const price = closes[closes.length - 1];
+        const prev = closes[closes.length - 2];
+        const changePct = ((price - prev) / prev) * 100;
+        return {
+          key: t.key,
+          name: t.name,
+          unit: t.unit,
+          price: Math.round(price * 100) / 100,
+          changePct: Math.round(changePct * 10) / 10,
+        };
       } catch {
-        // prices optional
+        return null;
+      }
+    })
+  );
+
+  return results.filter((r): r is PriceData => r !== null);
+}
+
+async function getTradeIndices(): Promise<Record<string, TradeIndexData>> {
+  try {
+    const { data, error } = await supabase
+      .from("trade_indices")
+      .select("*")
+      .order("fecha", { ascending: false })
+      .limit(20);
+
+    if (error || !data) return {};
+
+    const latest: Record<string, TradeIndexData> = {};
+    for (const row of data) {
+      if (!latest[row.indicador]) {
+        latest[row.indicador] = { valor: row.valor, fecha: row.fecha };
       }
     }
+    return latest;
+  } catch {
+    return {};
+  }
+}
 
-    async function loadTradeIndices() {
-      try {
-        const res = await fetch("/api/trade-indices");
-        const data = await res.json();
-        setTradeIndices(data);
-      } catch {
-        // trade indices optional
-      }
+async function getBriefing(): Promise<{ text: string; filename: string; error: string }> {
+  const today = getTodayFilename();
+  try {
+    const res = await fetch(`${GITHUB_RAW}/${today}?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) {
+      return { text: "", filename: today, error: "Today's briefing is not available yet. Check back soon." };
     }
+    const buffer = await res.arrayBuffer();
+    const text = new TextDecoder("utf-8").decode(buffer);
+    return { text, filename: today, error: "" };
+  } catch {
+    return { text: "", filename: today, error: "Today's briefing is not available yet. Check back soon." };
+  }
+}
 
-    loadBriefing();
-    loadPrices();
-    loadTradeIndices();
-  }, []);
+export default async function Home() {
+  const [prices, tradeIndices, briefingData] = await Promise.all([
+    getPrices(),
+    getTradeIndices(),
+    getBriefing(),
+  ]);
 
-  const bodyHtml = briefingText ? parseBriefingBody(briefingText) : "";
-  const dateLabel = formatDate(filename);
+  const bodyHtml = briefingData.text ? parseBriefingBody(briefingData.text) : "";
+  const dateLabel = formatDate(briefingData.filename);
   const tradeIndexEntries = Object.entries(tradeIndices);
 
   return (
@@ -159,9 +200,6 @@ export default function Home() {
                 </span>
               </div>
             ))}
-            <div className="ticker-timestamp">
-              {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} ET
-            </div>
           </div>
         </div>
       )}
@@ -191,15 +229,11 @@ export default function Home() {
           </div>
         )}
 
-        {loading && (
-          <div className="loading-state">Loading today's briefing...</div>
+        {briefingData.error && (
+          <div className="loading-state">{briefingData.error}</div>
         )}
 
-        {error && !loading && (
-          <div className="loading-state">{error}</div>
-        )}
-
-        {!loading && !error && briefingText && (
+        {briefingData.text && (
           <>
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
