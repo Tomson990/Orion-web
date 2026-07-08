@@ -78,7 +78,7 @@ async function getTradeIndices() {
 async function getBriefing() {
   try {
     const today = getTodayFilename();
-    const res = await fetch(`${GITHUB_RAW}/${today}`);
+    const res = await fetch(`${GITHUB_RAW}/${today}`, { cache: "no-store" });
     if (!res.ok) return "Briefing de hoy aún no disponible.";
     const buffer = await res.arrayBuffer();
     return new TextDecoder("utf-8").decode(buffer);
