@@ -174,6 +174,23 @@ export default function Home() {
       </header>
 
       <main className="main-content">
+        {tradeIndexEntries.length > 0 && (
+          <div className="trade-indices-block">
+            <div className="section-title">Comercio Internacional</div>
+            <div className="trade-indices-grid">
+              {tradeIndexEntries.map(([key, data]) => (
+                <div className="trade-index-item" key={key}>
+                  <span className="trade-index-label">
+                    {TRADE_INDEX_LABELS[key] || key}
+                  </span>
+                  <span className="trade-index-value">{data.valor}</span>
+                  <span className="trade-index-date">{data.fecha}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="loading-state">Loading today's briefing...</div>
         )}
@@ -187,23 +204,6 @@ export default function Home() {
             <div className="briefing-eyebrow">Daily Briefing</div>
             <h1 className="briefing-title">Global Energy Intelligence</h1>
             <div className="briefing-date">{dateLabel}</div>
-
-            {tradeIndexEntries.length > 0 && (
-              <div className="trade-indices-block">
-                <div className="section-title">Comercio Internacional</div>
-                <div className="trade-indices-grid">
-                  {tradeIndexEntries.map(([key, data]) => (
-                    <div className="trade-index-item" key={key}>
-                      <span className="trade-index-label">
-                        {TRADE_INDEX_LABELS[key] || key}
-                      </span>
-                      <span className="trade-index-value">{data.valor}</span>
-                      <span className="trade-index-date">{data.fecha}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div
               className="briefing-body"
