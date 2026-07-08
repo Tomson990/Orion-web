@@ -265,7 +265,7 @@ body {
   .prices-bar { gap: 0.75rem 1.5rem; }
 }
 
-/* ── TICKER BAR ── */
+/* â”€â”€ TICKER BAR â”€â”€ */
 .ticker-bar {
   background: #111111;
   border-bottom: 1px solid #2a2a2a;
@@ -324,129 +324,7 @@ body {
   color: #555555;
   letter-spacing: 0.05em;
 }
-
-/* ── NEWS SECTION ── */
-.news-section {
-  margin-top: 64px;
-  padding-top: 40px;
-  border-top: 1px solid var(--rule);
-}
-
-.news-header {
-  margin-bottom: 24px;
-}
-
-.news-eyebrow {
-  display: block;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-bottom: 6px;
-}
-
-.news-title {
-  font-family: var(--font-playfair), serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-.news-card {
-  display: block;
-  background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  padding: 16px 18px;
-  text-decoration: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.news-card:hover {
-  border-color: var(--signal);
-  box-shadow: 0 2px 12px rgba(200, 65, 10, 0.08);
-}
-
-.news-card-source {
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--signal);
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
-.news-card-title {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--ink);
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-
-.news-card-time {
-  font-size: 0.62rem;
-  color: var(--ink-faint);
-  letter-spacing: 0.04em;
-}
-
-@media (max-width: 640px) {
-  .news-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── BRIEFING TABLE ── */
-.briefing-body table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1.5rem 0;
-  font-size: 0.9rem;
-}
-
-.briefing-body th,
-.briefing-body td {
-  border: 1px solid var(--rule);
-  padding: 10px 14px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.briefing-body th {
-  background: var(--signal-faint);
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-}
-
-.briefing-body tr:nth-child(even) td {
-  background: #f5f4f0;
-}
-
-/* ── NEWS SECTION INNER ── */
-.news-section {
-  background: #f5f4f0;
-  border-top: 1px solid var(--rule);
-  padding: 48px 0 64px;
-  margin-top: 0;
-}
-
-.news-section-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* â”€â”€ TRADE INDICES (Comercio Internacional) â”€â”€ */
+/* ── TRADE INDICES (Comercio Internacional) ── */
 .trade-indices-block {
   margin-bottom: 2.5rem;
 }
