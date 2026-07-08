@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const GITHUB_RAW = "https://raw.githubusercontent.com/Tomson990/Orion/main/orion";
+const GITHUB_RAW = "https://raw.githubusercontent.com/Tomson990/Orion/main/orion/briefings";
 
 function getTodayFilename() {
   const d = new Date();
