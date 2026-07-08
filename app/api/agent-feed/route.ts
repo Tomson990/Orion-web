@@ -80,7 +80,8 @@ async function getBriefing() {
     const today = getTodayFilename();
     const res = await fetch(`${GITHUB_RAW}/${today}`);
     if (!res.ok) return "Briefing de hoy aún no disponible.";
-    return await res.text();
+    const buffer = await res.arrayBuffer();
+    return new TextDecoder("utf-8").decode(buffer);
   } catch {
     return "Briefing de hoy aún no disponible.";
   }
