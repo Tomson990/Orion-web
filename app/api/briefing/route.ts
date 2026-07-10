@@ -69,27 +69,29 @@ async function generateBriefing(articles: Article[]): Promise<string> {
     month: "long",
     day: "numeric",
   });
-const prompt =
-  "Sos un analista de inteligencia de supply chain y sourcing para AES, empresa global de energia con operaciones en Estados Unidos, Mexico, Argentina, Chile, Colombia, Panama, Republica Dominicana, El Salvador y Brasil.\n\n" +
-  "AES opera plantas de generacion termica, hidro, solar, eolica y almacenamiento de energia. Sus principales categorias de compra son: transformadores de potencia, cables electricos, acero estructural, paneles solares, aerogeneradores, equipos de almacenamiento (baterias), gas natural y LNG, servicios de O&M, materiales de MRO (mantenimiento, reparacion y operaciones).\n\n" +
-  "Los commodities que mas impactan sus costos son: cobre (cables y transformadores), acero (estructuras), aluminio (cables), litio (baterias), gas natural (generacion termica), petroleo (logistica y operaciones).\n\n" +
-  "Hoy es " + today + ".\n\n" +
-  "Analiza estas noticias y genera un briefing de inteligencia accionable para el equipo de supply chain de AES:\n\n" +
-  articlesText + "\n\n" +
-  "Formato exacto:\n\n" +
-  "ORION ENERGY INTELLIGENCE — AES\n" +
-  today + "\n\n" +
-  "## 1. [TITULO] - [ALTA/MEDIA/BAJA]\n\n" +
-  "**Que esta pasando:** [2-3 oraciones]\n" +
-  "**Impacto para AES:** [Como afecta especificamente a las operaciones o compras de AES en la region]\n" +
-  "**Accion recomendada:** [Que deberia considerar el equipo de supply chain]\n\n" +
-  "---\n\n" +
-  "[Repetir para 3-4 narrativas mas relevantes para AES]\n\n" +
-  "ALERTAS DE COSTO\n" +
-  "[Movimientos de precio de commodities criticos para AES esta semana]\n\n" +
-  "SINTESIS EJECUTIVA\n" +
-  "[3-4 oraciones sobre el panorama para supply chain de AES hoy]\n\n" +
-  "Prioriza noticias que afecten: precios de insumos criticos, disrupciones logisticas en Latinoamerica y Centroamerica, cambios regulatorios en los paises donde opera AES, proyectos de energia renovable en la region. Se directo y accionable. Responde en español.";
+
+  const prompt =
+    "Sos un analista de inteligencia de supply chain y sourcing para AES, empresa global de energia con operaciones en Estados Unidos, Mexico, Argentina, Chile, Colombia, Panama, Republica Dominicana, El Salvador y Brasil.\n\n" +
+    "AES opera plantas de generacion termica, hidro, solar, eolica y almacenamiento de energia. Sus principales categorias de compra son: transformadores de potencia, cables electricos, acero estructural, paneles solares, aerogeneradores, equipos de almacenamiento (baterias), gas natural y LNG, servicios de O&M, materiales de MRO (mantenimiento, reparacion y operaciones).\n\n" +
+    "Los commodities que mas impactan sus costos son: cobre (cables y transformadores), acero (estructuras), aluminio (cables), litio (baterias), gas natural (generacion termica), petroleo (logistica y operaciones).\n\n" +
+    "Hoy es " + today + ".\n\n" +
+    "Analiza estas noticias y genera un briefing de inteligencia accionable para el equipo de supply chain de AES:\n\n" +
+    articlesText + "\n\n" +
+    "Formato exacto:\n\n" +
+    "ORION ENERGY INTELLIGENCE — AES\n" +
+    today + "\n\n" +
+    "## 1. [TITULO] - [ALTA/MEDIA/BAJA]\n\n" +
+    "**Que esta pasando:** [2-3 oraciones]\n" +
+    "**Impacto para AES:** [Como afecta especificamente a las operaciones o compras de AES en la region]\n" +
+    "**Accion recomendada:** [Que deberia considerar el equipo de supply chain]\n\n" +
+    "---\n\n" +
+    "[Repetir para 3-4 narrativas mas relevantes para AES]\n\n" +
+    "ALERTAS DE COSTO\n" +
+    "[Movimientos de precio de commodities criticos para AES esta semana]\n\n" +
+    "SINTESIS EJECUTIVA\n" +
+    "[3-4 oraciones sobre el panorama para supply chain de AES hoy]\n\n" +
+    "Prioriza noticias que afecten: precios de insumos criticos, disrupciones logisticas en Latinoamerica y Centroamerica, cambios regulatorios en los paises donde opera AES, proyectos de energia renovable en la region. Se directo y accionable. Responde en español.";
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -105,6 +107,7 @@ const prompt =
   });
 
   if (!res.ok) return "";
+
   const buffer = await res.arrayBuffer();
   const data = JSON.parse(new TextDecoder("utf-8").decode(buffer));
 
@@ -115,7 +118,6 @@ const prompt =
     .filter((t: string) => t);
 
   return textBlocks.join("\n");
-}
 }
 
 export async function GET() {
