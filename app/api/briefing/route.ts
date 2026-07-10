@@ -105,8 +105,17 @@ const prompt =
   });
 
   if (!res.ok) return "";
-  const data = await res.json();
-  return data.content?.[0]?.text || "";
+  const buffer = await res.arrayBuffer();
+  const data = JSON.parse(new TextDecoder("utf-8").decode(buffer));
+
+  const contentBlocks = data.content || [];
+  const textBlocks = contentBlocks
+    .filter((b: { type: string; text?: string }) => b.type === "text")
+    .map((b: { text?: string }) => b.text || "")
+    .filter((t: string) => t);
+
+  return textBlocks.join("\n");
+}
 }
 
 export async function GET() {
