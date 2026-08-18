@@ -106,7 +106,10 @@ async function generateBriefing(articles: Article[]): Promise<string> {
     }),
   });
 
-  if (!res.ok) return "";
+  if (!res.ok) {
+  const errText = await res.text();
+  throw new Error(`API error ${res.status}: ${errText}`);
+}
 
   const buffer = await res.arrayBuffer();
   const data = JSON.parse(new TextDecoder("utf-8").decode(buffer));
