@@ -101,7 +101,7 @@ async function generateBriefing(articles: Article[]): Promise<string> {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 4000,
+      max_tokens: 1000,
       messages: [{ role: "user", content: prompt }],
     }),
   });
@@ -133,7 +133,7 @@ export async function GET() {
       return NextResponse.json({ error: "No articles available" }, { status: 503 });
     }
 
-    const briefing = await generateBriefing(allArticles.slice(0, 25));
+    const briefing = await generateBriefing(allArticles.slice(0, 5));
 
     if (!briefing) {
       return NextResponse.json({ error: "Failed to generate briefing" }, { status: 503 });
